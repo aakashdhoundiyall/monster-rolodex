@@ -1,34 +1,96 @@
 import React,{Component} from 'react';
-import logo from './logo.svg';
 import './App.css';
-import { CardList }  from './components/card-list/card-list-component';
-import { SearchBox } from './components/search-box/search-box.component';
+import   Spinner  from './components/spinner/spinner'
+import { RepeatButton } from './components/repeat/repeat-component';
+
 class App extends Component {
-  constructor(){
-    super();
-    this.state = {
-      monsters : [],
-      searchField : ""
+	constructor(props) {
+		super(props);
+		this.state = {
+		winner: null
+	}
+	this.finishHandler = this.finishHandler.bind(this)
+	this.handleClick = this.handleClick.bind(this);
+	}  
+
+  handleClick() { 
+    this.setState({ winner: null });
+    this.emptyArray();
+    this._child1.forceUpdateHandler();
+    this._child2.forceUpdateHandler();
+    this._child3.forceUpdateHandler();
+  }
+
+	static loser = [
+		'Not quite', 
+		'Stop gambling', 
+		'Hey, you lost!', 
+		'Ouch! I felt that',      
+		'Don\'t beat yourself up',
+		'There goes the college fund',
+		'I have a cat. You have a loss',
+		'You\'re awesome at losing',
+		'Coding is hard',
+		'Don\'t hate the coder'
+	];
+
+  static matches = [];
+
+  finishHandler(value) {
+    App.matches.push(value);  
+
+    if (App.matches.length === 3) {
+      const { winner } = this.state;
+      const first = App.matches[0];
+      let results = App.matches.every(match => match === first)
+      this.setState({ winner: results });
     }
   }
-  componentDidMount(){
-    fetch('https://jsonplaceholder.typicode.com/users')
-    .then(response => response.json())
-    .then(monstersData => this.setState({monsters:monstersData})
-    )
+
+  
+  WinningSound() {
+    return (
+    <audio autoplay="autoplay" className="player" preload="false">
+      <source src="https://andyhoffman.codes/random-assets/img/slots/winning_slot.wav" />
+    </audio>  
+    );
+  }
+  emptyArray() {
+    App.matches = [];
   }
   render(){
-    const {monsters,searchField} = this.state;
-    const filteredMonsters = monsters.filter(monster => monster.name.toLowerCase().includes(searchField.toLowerCase()))
+    const { winner } = this.state;
+    const getLoser = () => {       
+      return App.loser[Math.floor(Math.random()*App.loser.length)]
+    }
+    let repeatButton = null;
+    let winningSound = null;
+
+    if (winner !== null) {
+      repeatButton = <RepeatButton onClick={this.handleClick} />
+    }
+    
+    if (winner) {
+      //winningSound = <WinningSound />
+    }
+
     return (
-      <div className="App">
-        <h1>Monsters Rolodex</h1>
-        <SearchBox placeholder = "search monsters" handleChange = {e => this.setState({searchField : e.target.value })}  />
-        <CardList monsters = {filteredMonsters} />
+      <div>
+        {/* {winningSound} */}
+        <h1 style={{ color: 'white'}}>
+          <span>{winner === null ? 'Waiting…' : winner ? '🤑 Pure skill! 🤑' : getLoser()}</span>
+        </h1>
+
+        <div className={`spinner-container`}>
+          <Spinner onFinish={this.finishHandler} ref={(child) => { this._child1 = child; }} timer="1000" />
+          <Spinner onFinish={this.finishHandler} ref={(child) => { this._child2 = child; }} timer="1400" />
+          <Spinner onFinish={this.finishHandler} ref={(child) => { this._child3 = child; }} timer="2200" />
+          <div className="gradient-fade"></div>
+        </div>
+        {repeatButton}          
       </div>
     );
   }
-  
-}
+  }
 
 export default App;
